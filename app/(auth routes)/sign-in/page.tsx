@@ -24,9 +24,8 @@ export default function SignInPage() {
             toast.success("Login successful!");
             router.push("/profile");
         } catch (error) {
-            // <-- 2. Прибираємо 'err: any'
             let errorMessage = "Login failed. Please check your credentials.";
-            // 3. Перевіряємо тип помилки
+            // Перевіряємо тип помилки
             if (isAxiosError(error) && error.response) {
                 errorMessage = error.response.data.message || errorMessage;
             } else if (error instanceof Error) {
@@ -40,7 +39,6 @@ export default function SignInPage() {
     };
 
     return (
-        // JSX розмітка залишається без змін
         <main className={css.mainContent}>
             <Toaster position="top-right" />
             <form className={css.form} onSubmit={handleSubmit}>

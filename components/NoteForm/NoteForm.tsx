@@ -13,7 +13,18 @@ interface NoteFormProps {
     onCancel: () => void;
 }
 
-const TAGS: NoteTag[] = ["Todo", "Work", "Personal", "Meeting", "Shopping"];
+const TAGS: NoteTag[] = [
+    "Work",
+    "Personal",
+    "Meeting",
+    "Shopping",
+    "Ideas",
+    "Travel",
+    "Finance",
+    "Health",
+    "Important",
+    "Todo",
+];
 
 type FormErrors = Partial<Record<keyof DraftNote, string>>;
 

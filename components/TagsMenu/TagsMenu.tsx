@@ -7,7 +7,19 @@ import css from "./TagsMenu.module.css";
 const TagsMenu = () => {
     const [isOpen, setIsOpen] = useState(false); // Состояние для отслеживания открыто/закрыто
     const menuRef = useRef<HTMLDivElement>(null); // Ref для отслеживания кликов вне меню
-    const tags = ["All", "Todo", "Work", "Personal", "Meeting", "Shopping"];
+    const tags = [
+        "All",
+        "Work",
+        "Personal",
+        "Meeting",
+        "Shopping",
+        "Ideas",
+        "Travel",
+        "Finance",
+        "Health",
+        "Important",
+        "Todo",
+    ];
 
     const toggleMenu = () => {
         setIsOpen(!isOpen);

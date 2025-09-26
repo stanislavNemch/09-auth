@@ -1,10 +1,9 @@
-// app/(auth routes)/sign-up/page.tsx
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
-import { isAxiosError } from "axios"; // <-- 1. Імпортуємо isAxiosError
+import { isAxiosError } from "axios";
 import { signUp } from "@/lib/api/clientApi";
 import css from "./SignUpPage.module.css";
 
@@ -25,9 +24,8 @@ export default function SignUpPage() {
             toast.success("Registration successful!");
             router.push("/profile");
         } catch (error) {
-            // <-- 2. Прибираємо 'err: any'
             let errorMessage = "Registration failed. Please try again.";
-            // 3. Перевіряємо тип помилки
+            // Перевіряємо тип помилки
             if (isAxiosError(error) && error.response) {
                 errorMessage = error.response.data.message || errorMessage;
             } else if (error instanceof Error) {
@@ -41,7 +39,6 @@ export default function SignUpPage() {
     };
 
     return (
-        // JSX розмітка залишається без змін
         <main className={css.mainContent}>
             <Toaster position="top-right" />
             <form className={css.form} onSubmit={handleSubmit}>
