@@ -51,7 +51,7 @@ export default function ProfilePage() {
                 </div>
                 <div className={css.avatarWrapper}>
                     <Image
-                        src={user?.avatar || "/default-avatar.png"} // Добавьте дефолтный аватар в public
+                        src={user?.avatar || "/default-avatar.png"}
                         alt="User Avatar"
                         width={120}
                         height={120}
