@@ -4,6 +4,7 @@ import {
     dehydrate,
 } from "@tanstack/react-query";
 import { fetchNoteByIdServer } from "@/lib/api/serverApi";
+import { fetchNoteById } from "@/lib/api/clientApi";
 import NoteDetailsClient from "./NoteDetails.client";
 import type { Metadata } from "next";
 
@@ -60,7 +61,7 @@ export default async function NoteDetailsPage({
 
     await queryClient.prefetchQuery({
         queryKey: ["note", id],
-        queryFn: () => fetchNoteByIdServer(id),
+        queryFn: () => fetchNoteById(id),
     });
 
     return (
