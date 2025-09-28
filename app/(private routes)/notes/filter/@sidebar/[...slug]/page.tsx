@@ -5,19 +5,7 @@ import { usePathname } from "next/navigation"; // Хук для определе
 import css from "./Sidebar.module.css";
 
 export default function SidebarNotes() {
-    const tags = [
-        "All",
-        "Work",
-        "Personal",
-        "Meeting",
-        "Shopping",
-        "Ideas",
-        "Travel",
-        "Finance",
-        "Health",
-        "Important",
-        "Todo",
-    ];
+    const tags = ["All", "Todo", "Work", "Personal", "Meeting", "Shopping"];
     const pathname = usePathname(); // Получаем текущий URL
 
     return (

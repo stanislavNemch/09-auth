@@ -4,16 +4,11 @@ import css from "./[...slug]/Sidebar.module.css";
 // Теги для фильтра
 const TAGS = [
     "All",
+    "Todo",
     "Work",
     "Personal",
     "Meeting",
     "Shopping",
-    "Ideas",
-    "Travel",
-    "Finance",
-    "Health",
-    "Important",
-    "Todo",
 ] as const;
 
 export default function Default() {
