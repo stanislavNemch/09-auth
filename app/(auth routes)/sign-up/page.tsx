@@ -5,27 +5,31 @@ import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
 import { isAxiosError } from "axios";
 import { signUp } from "@/lib/api/clientApi";
+import { useAuthStore } from "@/lib/store/authStore";
 import css from "./SignUpPage.module.css";
 
+// Реєстрація користувача
 export default function SignUpPage() {
     const router = useRouter();
+    const { setUser } = useAuthStore();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
+    // Обробка надсилання форми
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError(null);
         setIsLoading(true);
 
         try {
-            await signUp({ email, password });
+            const user = await signUp({ email, password });
+            setUser(user);
             toast.success("Registration successful!");
             router.push("/profile");
         } catch (error) {
             let errorMessage = "Registration failed. Please try again.";
-            // Перевіряємо тип помилки
             if (isAxiosError(error) && error.response) {
                 errorMessage = error.response.data.message || errorMessage;
             } else if (error instanceof Error) {

@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
 import { isAxiosError } from "axios";
 import { signIn } from "@/lib/api/clientApi";
+import { useAuthStore } from "@/lib/store/authStore"; // 1. Імпортуємо стор
 import css from "./SignInPage.module.css";
 
 export default function SignInPage() {
     const router = useRouter();
+    const { setUser } = useAuthStore(); // 2. Отримуємо метод setUser
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
@@ -20,12 +22,12 @@ export default function SignInPage() {
         setIsLoading(true);
 
         try {
-            await signIn({ email, password });
+            const user = await signIn({ email, password });
+            setUser(user); // 3. Використовуємо setUser для оновлення стану
             toast.success("Login successful!");
             router.push("/profile");
         } catch (error) {
             let errorMessage = "Login failed. Please check your credentials.";
-            // Перевіряємо тип помилки
             if (isAxiosError(error) && error.response) {
                 errorMessage = error.response.data.message || errorMessage;
             } else if (error instanceof Error) {
