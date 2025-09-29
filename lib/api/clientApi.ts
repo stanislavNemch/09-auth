@@ -1,6 +1,6 @@
 import apiClient from "./api";
 import { User, UserCredentials, UserProfileUpdate } from "@/types/user";
-import type { Note, NoteTag } from "@/types/note";
+import type { Note, NewNotePayload, FetchNotesResponse } from "@/types/note";
 
 // Регистрация пользователя
 export const signUp = async (credentials: UserCredentials): Promise<User> => {
@@ -33,24 +33,11 @@ export const updateUserProfile = async (
     return data;
 };
 
-// Типи для роботи з нотатками
-export interface FetchNotesResponse {
-    notes: Note[];
-    totalPages: number;
-}
-
 // Параметри для отримання нотаток
 interface FetchNotesParams {
     page?: number;
     query?: string;
     tag?: string;
-}
-
-// Дані для створення нової нотатки
-export interface NewNotePayload {
-    title: string;
-    content: string;
-    tag: NoteTag;
 }
 
 // Отримання списку нотаток з підтримкою пагінації, пошуку та фільтрації за тегом
