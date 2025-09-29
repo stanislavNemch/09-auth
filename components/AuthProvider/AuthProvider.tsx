@@ -3,43 +3,51 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/lib/store/authStore";
-import { getCurrentUser } from "@/lib/api/clientApi";
+import { getCurrentUser, checkSession } from "@/lib/api/clientApi";
 
-// Список приватных маршрутов
 const privateRoutes = ["/notes", "/profile"];
 
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const router = useRouter();
     const pathname = usePathname();
-    const { isAuthenticated, setUser, clearAuthState } = useAuthStore();
+    const { setUser, clearAuthState } = useAuthStore();
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const checkAuth = async () => {
-            // Проверяем, является ли текущий маршрут приватным
             const isPrivateRoute = privateRoutes.some((route) =>
                 pathname.startsWith(route)
             );
 
             if (isPrivateRoute) {
                 try {
-                    // Пытаемся получить данные о пользователе
+                    // 2. Спочатку перевіряємо, чи валідна сесія
+                    const session = await checkSession();
+                    if (!session.success) {
+                        // Якщо сесія невалідна, одразу викидаємо помилку
+                        throw new Error("Session expired or invalid");
+                    }
+                    // 3. Тільки після успішної перевірки сесії отримуємо дані користувача
                     const user = await getCurrentUser();
-                    setUser(user); // Если успешно, обновляем состояние
+                    setUser(user);
                 } catch (error) {
-                    // Если токен невалидный или сессия истекла
+                    // Цей блок спрацює, якщо будь-який із запитів провалився
                     clearAuthState();
-                    router.replace("/sign-in"); // Перенаправляем на страницу входа
+                    router.replace("/sign-in");
                 }
             }
+            // Завершуємо завантаження для будь-яких маршрутів
             setIsLoading(false);
         };
 
         checkAuth();
     }, [pathname, router, setUser, clearAuthState]);
 
-    // Пока идет проверка, показываем лоадер
-    if (isLoading) {
+    // Показуємо лоадер, поки триває перевірка на приватних маршрутах
+    if (
+        isLoading &&
+        privateRoutes.some((route) => pathname.startsWith(route))
+    ) {
         return <p>Loading, please wait...</p>;
     }
 
