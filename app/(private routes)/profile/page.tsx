@@ -1,40 +1,37 @@
-"use client";
-
-import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import Image from "next/image";
-import { getCurrentUser } from "@/lib/api/clientApi";
-import { useAuthStore } from "@/lib/store/authStore";
+import { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { getCurrentUserServer } from "@/lib/api/serverApi";
 import css from "./ProfilePage.module.css";
-import { useEffect } from "react";
 
-export default function ProfilePage() {
-    const { setUser } = useAuthStore();
-
-    const {
-        data: user,
-        isLoading,
-        isError,
-        error,
-    } = useQuery({
-        queryKey: ["user-profile"],
-        queryFn: getCurrentUser,
-        retry: false, // Не повторювати запит при помилці
-    });
-
-    // Синхронізуємо дані з запиту з станом Zustand
-    useEffect(() => {
-        if (user) {
-            setUser(user);
-        }
-    }, [user, setUser]);
-
-    if (isLoading) {
-        return <p>Loading profile...</p>;
+// 1. Динамічна генерація метаданих на сервері
+export async function generateMetadata(): Promise<Metadata> {
+    try {
+        const user = await getCurrentUserServer();
+        return {
+            title: `${user.username}'s Profile | NoteHub`,
+            description: `View and manage ${user.username}'s profile on NoteHub.`,
+        };
+    } catch (error) {
+        return {
+            title: "Profile | NoteHub",
+            description: "View and manage your user profile on NoteHub.",
+        };
     }
+}
 
-    if (isError) {
-        return <p>Error loading profile: {error.message}</p>;
+// 2. Компонент тепер є асинхронним серверним компонентом
+export default async function ProfilePage() {
+    let user;
+    try {
+        // 3. Отримуємо дані користувача безпосередньо на сервері
+        user = await getCurrentUserServer();
+    } catch (error) {
+        // Якщо сталася помилка (наприклад, недійсний токен),
+        // перенаправляємо на сторінку входу.
+        // Це додатковий шар захисту на випадок, якщо middleware пропустить запит.
+        redirect("/sign-in");
     }
 
     return (
@@ -51,7 +48,7 @@ export default function ProfilePage() {
                 </div>
                 <div className={css.avatarWrapper}>
                     <Image
-                        src={user?.avatar || "/default-avatar.png"}
+                        src={user.avatar || "/default-avatar.png"}
                         alt="User Avatar"
                         width={120}
                         height={120}
@@ -61,10 +58,10 @@ export default function ProfilePage() {
                 </div>
                 <div className={css.profileInfo}>
                     <p>
-                        <strong>Username:</strong> {user?.username}
+                        <strong>Username:</strong> {user.username}
                     </p>
                     <p>
-                        <strong>Email:</strong> {user?.email}
+                        <strong>Email:</strong> {user.email}
                     </p>
                 </div>
             </div>
