@@ -4,7 +4,6 @@ import {
     dehydrate,
 } from "@tanstack/react-query";
 import { fetchNoteByIdServer } from "@/lib/api/serverApi";
-import { fetchNoteById } from "@/lib/api/clientApi";
 import NoteDetailsClient from "./NoteDetails.client";
 import type { Metadata } from "next";
 
@@ -13,8 +12,10 @@ interface NoteDetailsPageProps {
     params: Promise<{ id: string }>;
 }
 
+// Визначаємо siteUrl з перевіркою наявності змінної оточення
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
+// Функція для генерації метаданих сторінки
 export async function generateMetadata({
     params,
 }: {
@@ -61,7 +62,7 @@ export default async function NoteDetailsPage({
 
     await queryClient.prefetchQuery({
         queryKey: ["note", id],
-        queryFn: () => fetchNoteById(id),
+        queryFn: () => fetchNoteByIdServer(id),
     });
 
     return (

@@ -7,7 +7,7 @@ import css from "./NoteDetails.module.css";
 
 const NoteDetailsClient = () => {
     const params = useParams();
-    // Получаем id. Он может быть строкой или массивом строк (в случае catch-all routes).
+    // Отримуємо id. Він може бути рядком або масивом рядків (у разі catch-all routes).
     const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
     const {
@@ -16,14 +16,14 @@ const NoteDetailsClient = () => {
         isError,
     } = useQuery({
         queryKey: ["note", id],
-        // Добавляем проверку внутри queryFn
+        // Додаємо перевірку всередині queryFn
         queryFn: () => {
             if (!id) {
                 throw new Error("Note ID is not available");
             }
             return fetchNoteById(id);
         },
-        // Этот ключ предотвращает выполнение запроса, если id отсутствует.
+        // Це ключ запобігає виконанню запиту, якщо id відсутній.
         enabled: !!id,
         refetchOnMount: false,
     });
