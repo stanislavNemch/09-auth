@@ -16,8 +16,6 @@ export async function middleware(request: NextRequest) {
     const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
 
     // Виправляємо перенаправлення на головну сторінку
-    // Но в ДЗ вказано "У разі успішної автентифікації має відбуватись
-    // автоматичний редірект користувача на сторінку профілю /profile."
     if (isAuthRoute && accessToken) {
         return NextResponse.redirect(new URL("/", request.url));
     }
