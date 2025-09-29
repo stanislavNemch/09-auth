@@ -1,68 +1,10 @@
-import { NextResponse, type NextRequest } from "next/server";
-import { parse } from "cookie";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { checkSessionServer } from "./lib/api/serverApi";
 
-// Маршрути, які потребують автентифікації
 const privateRoutes = ["/notes", "/profile"];
 const authRoutes = ["/sign-in", "/sign-up"];
 
-// Оновлення токенів
-async function refreshTokens(
-    request: NextRequest
-): Promise<NextResponse | null> {
-    try {
-        // Виконуємо запит на оновлення сесії
-        const response = await fetch(
-            new URL("/api/auth/session", request.url),
-            {
-                method: "GET",
-                headers: {
-                    cookie: request.headers.get("cookie") || "",
-                },
-            }
-        );
-
-        if (!response.ok) {
-            return null;
-        }
-
-        const newHeaders = new Headers(response.headers);
-        const nextResponse = NextResponse.next({
-            request: {
-                headers: newHeaders,
-            },
-        });
-
-        // Оновлюємо куки
-        const setCookie = response.headers.get("set-cookie");
-        if (setCookie) {
-            const cookieArray = Array.isArray(setCookie)
-                ? setCookie
-                : [setCookie];
-            cookieArray.forEach((cookieStr) => {
-                const parsed = parse(cookieStr);
-                const [name, value] = Object.entries(parsed)[0];
-
-                if (name && value) {
-                    nextResponse.cookies.set(name, value, {
-                        expires: parsed.Expires
-                            ? new Date(parsed.Expires)
-                            : undefined,
-                        path: parsed.Path,
-                        maxAge: Number(parsed["Max-Age"]),
-                        httpOnly: true,
-                    });
-                }
-            });
-        }
-
-        return nextResponse;
-    } catch (error) {
-        console.error("Refresh token error:", error);
-        return null;
-    }
-}
-
-// Обробка запитів
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const accessToken = request.cookies.get("accessToken")?.value;
@@ -73,22 +15,33 @@ export async function middleware(request: NextRequest) {
     );
     const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
 
+    // Виправляємо перенаправлення на головну сторінку
+    // Но в ДЗ вказано "У разі успішної автентифікації має відбуватись
+    // автоматичний редірект користувача на сторінку профілю /profile."
     if (isAuthRoute && accessToken) {
-        return NextResponse.redirect(new URL("/profile", request.url));
+        return NextResponse.redirect(new URL("/", request.url));
     }
 
     if (isPrivateRoute) {
         if (accessToken) {
+            // Токен є, пропускаємо
             return NextResponse.next();
         }
 
         if (refreshToken) {
-            const refreshResponse = await refreshTokens(request);
-            if (refreshResponse && refreshResponse.cookies.has("accessToken")) {
-                return refreshResponse;
+            try {
+                // Викликаємо серверну функцію для оновлення сесії
+                await checkSessionServer();
+                // Якщо функція виконалася успішно, значить кукі оновилися.
+                // Ми можемо пропустити запит далі.
+                return NextResponse.next();
+            } catch (error) {
+                // Якщо оновлення не вдалося, поводимося так, ніби токена немає
+                console.error("Session refresh failed in middleware:", error);
             }
         }
 
+        // Якщо жоден токен не спрацював, перенаправляємо на логін
         const loginUrl = new URL("/sign-in", request.url);
         loginUrl.searchParams.set("next", pathname);
         return NextResponse.redirect(loginUrl);
@@ -96,6 +49,7 @@ export async function middleware(request: NextRequest) {
 
     return NextResponse.next();
 }
+
 // Налаштування маршрутів
 export const config = {
     matcher: ["/profile/:path*", "/notes/:path*", "/sign-in", "/sign-up"],

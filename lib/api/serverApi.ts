@@ -1,11 +1,14 @@
 import { cookies } from "next/headers";
 import { parse } from "cookie";
+import { AxiosResponse } from "axios";
 import { api as serverApiClient } from "@/app/api/api";
 import type { Note, FetchNotesResponse } from "@/types/note";
 import { User } from "@/types/user";
 
 // 2. Функція для перевірки/оновлення сесії
-export const checkSessionServer = async () => {
+export const checkSessionServer = async (): Promise<
+    AxiosResponse<{ user: User }>
+> => {
     const cookieStore = await cookies();
     const response = await serverApiClient.get("auth/session", {
         headers: {
@@ -13,6 +16,7 @@ export const checkSessionServer = async () => {
         },
     });
 
+    // Логіка оновлення кукі в cookieStore
     const setCookie = response.headers["set-cookie"];
     if (setCookie) {
         const cookieArray = Array.isArray(setCookie) ? setCookie : [setCookie];
@@ -31,8 +35,8 @@ export const checkSessionServer = async () => {
             }
         }
     }
-
-    return response.data;
+    // Повертаємо повний об’єкт відповіді Axios
+    return response;
 };
 
 // 3. Функція для отримання поточного користувача на сервері
