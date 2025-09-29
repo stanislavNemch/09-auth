@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import Image from "next/image"; // Используем Image из Next.js
+import Image from "next/image";
 import { getCurrentUser } from "@/lib/api/clientApi";
 import { useAuthStore } from "@/lib/store/authStore";
 import css from "./ProfilePage.module.css";
@@ -19,10 +19,10 @@ export default function ProfilePage() {
     } = useQuery({
         queryKey: ["user-profile"],
         queryFn: getCurrentUser,
-        retry: false, // Не повторять запрос при ошибке
+        retry: false, // Не повторювати запит при помилці
     });
 
-    // Синхронизируем данные из запроса с состоянием Zustand
+    // Синхронізуємо дані з запиту з станом Zustand
     useEffect(() => {
         if (user) {
             setUser(user);

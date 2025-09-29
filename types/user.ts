@@ -1,12 +1,12 @@
+// Тип для користувача
 export interface User {
-    id: string;
     username: string;
     email: string;
     avatar: string;
 }
 
-// Тип для данных регистрации/логина
+// Тип для даних реєстрації/логіна
 export type UserCredentials = Pick<User, "email"> & { password?: string };
 
-// Тип для обновления профиля
+// Тип для оновлення профілю
 export type UserProfileUpdate = Partial<Pick<User, "username">>;

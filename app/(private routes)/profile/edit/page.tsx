@@ -15,7 +15,7 @@ export default function EditProfilePage() {
     const { user: authUser, setUser } = useAuthStore();
     const [username, setUsername] = useState("");
 
-    // 1. Получаем текущие данные пользователя для заполнения формы
+    // 1. Отримуємо поточні дані користувача для заповнення форми
     const {
         data: user,
         isLoading,
@@ -23,35 +23,36 @@ export default function EditProfilePage() {
     } = useQuery({
         queryKey: ["user-profile"],
         queryFn: getCurrentUser,
-        staleTime: 5 * 60 * 1000, // Кешируем данные на 5 минут
+        staleTime: 5 * 60 * 1000, // Кешуємо дані на 5 хвилин
     });
 
-    // 2. Устанавливаем начальное значение для инпута, когда данные загружены
+    // 2. Встановлюємо початкове значення для інпуту, коли дані завантажені
     useEffect(() => {
         if (user) {
             setUsername(user.username);
-            // Также обновляем данные в Zustand на всякий случай
-            if (!authUser || authUser.id !== user.id) {
+            // Також оновлюємо дані в Zustand на всякий випадок
+            if (!authUser || authUser.email !== user.email) {
                 setUser(user);
             }
         }
     }, [user, authUser, setUser]);
 
-    // 3. Создаем мутацию для обновления профиля
+    // 3. Створюємо мутацію для оновлення профілю
     const mutation = useMutation({
         mutationFn: updateUserProfile,
         onSuccess: (updatedUser) => {
             toast.success("Profile updated successfully!");
-            setUser(updatedUser); // Обновляем состояние в Zustand
-            // Инвалидируем кеш, чтобы на странице профиля были свежие данные
+            setUser(updatedUser); // Оновлюємо стан в Zustand
+            // Інвалідовуємо кеш, щоб на сторінці профілю були свіжі дані
             queryClient.invalidateQueries({ queryKey: ["user-profile"] });
-            router.push("/profile"); // Перенаправляем на страницу профиля
+            router.push("/profile"); // Перенаправляємо на сторінку профілю
         },
         onError: () => {
             toast.error("Failed to update profile. Please try again.");
         },
     });
 
+    // 4. Обробка форми
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (username.trim() === user?.username) {
@@ -106,7 +107,7 @@ export default function EditProfilePage() {
                         <button
                             type="button"
                             className={css.cancelButton}
-                            onClick={() => router.back()} // Просто возвращаемся назад
+                            onClick={() => router.back()} // Просто повертаємося назад
                         >
                             Cancel
                         </button>
