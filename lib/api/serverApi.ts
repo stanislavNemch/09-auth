@@ -1,42 +1,48 @@
 import { cookies } from "next/headers";
-import { parse } from "cookie";
-import { AxiosResponse } from "axios";
 import { api as serverApiClient } from "@/app/api/api";
 import type { Note, FetchNotesResponse } from "@/types/note";
 import { User } from "@/types/user";
 
-// 2. Функція для перевірки/оновлення сесії
-export const checkSessionServer = async (): Promise<
-    AxiosResponse<{ user: User }>
-> => {
-    const cookieStore = await cookies();
-    const response = await serverApiClient.get("auth/session", {
-        headers: {
-            Cookie: cookieStore.toString(),
-        },
-    });
+// Тип для результату оновлення сесії
+export type RefreshSessionResult = {
+    newAccessToken: string | null;
+    newRefreshToken: string | null;
+};
 
-    // Логіка оновлення кукі в cookieStore
-    const setCookie = response.headers["set-cookie"];
-    if (setCookie) {
-        const cookieArray = Array.isArray(setCookie) ? setCookie : [setCookie];
-        for (const cookieStr of cookieArray) {
-            const parsed = parse(cookieStr);
-            const [name, value] = Object.entries(parsed)[0];
-            if (name && value) {
-                cookieStore.set(name, value, {
-                    expires: parsed.Expires
-                        ? new Date(parsed.Expires)
-                        : undefined,
-                    path: parsed.Path,
-                    maxAge: Number(parsed["Max-Age"]),
-                    httpOnly: true,
-                });
-            }
+// 2. Функція для перевірки/оновлення сесії
+// Функція тепер повертає нові токени або null
+export const checkSessionServer = async (): Promise<RefreshSessionResult> => {
+    const cookieStore = await cookies();
+    try {
+        const response = await serverApiClient.get("auth/session", {
+            headers: {
+                Cookie: cookieStore.toString(),
+            },
+        });
+
+        const setCookie = response.headers["set-cookie"];
+        if (!setCookie) {
+            return { newAccessToken: null, newRefreshToken: null };
         }
+
+        let newAccessToken: string | null = null;
+        let newRefreshToken: string | null = null;
+
+        const cookieArray = Array.isArray(setCookie) ? setCookie : [setCookie];
+        cookieArray.forEach((cookieStr) => {
+            if (cookieStr.startsWith("accessToken=")) {
+                newAccessToken = cookieStr;
+            }
+            if (cookieStr.startsWith("refreshToken=")) {
+                newRefreshToken = cookieStr;
+            }
+        });
+
+        return { newAccessToken, newRefreshToken };
+    } catch (error) {
+        // Якщо запит невдалий, повертаємо null
+        return { newAccessToken: null, newRefreshToken: null };
     }
-    // Повертаємо повний об’єкт відповіді Axios
-    return response;
 };
 
 // 3. Функція для отримання поточного користувача на сервері

@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { checkSessionServer } from "./lib/api/serverApi";
+import { cookies } from "next/headers";
 
 const privateRoutes = ["/notes", "/profile"];
 const authRoutes = ["/sign-in", "/sign-up"];
 
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
-    const accessToken = request.cookies.get("accessToken")?.value;
-    const refreshToken = request.cookies.get("refreshToken")?.value;
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get("accessToken")?.value;
+    const refreshToken = cookieStore.get("refreshToken")?.value;
 
     const isPrivateRoute = privateRoutes.some((route) =>
         pathname.startsWith(route)
@@ -29,10 +31,17 @@ export async function middleware(request: NextRequest) {
         if (refreshToken) {
             try {
                 // Викликаємо серверну функцію для оновлення сесії
-                await checkSessionServer();
-                // Якщо функція виконалася успішно, значить кукі оновилися.
-                // Ми можемо пропустити запит далі.
-                return NextResponse.next();
+                const { newAccessToken, newRefreshToken } =
+                    await checkSessionServer();
+                if (newAccessToken) {
+                    // Явно встановлюємо нові кукі у відповідь
+                    const response = NextResponse.next();
+                    if (newAccessToken)
+                        response.headers.append("Set-Cookie", newAccessToken);
+                    if (newRefreshToken)
+                        response.headers.append("Set-Cookie", newRefreshToken);
+                    return response;
+                }
             } catch (error) {
                 // Якщо оновлення не вдалося, поводимося так, ніби токена немає
                 console.error("Session refresh failed in middleware:", error);
