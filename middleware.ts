@@ -28,32 +28,49 @@ export async function middleware(request: NextRequest) {
             // Токен є, пропускаємо
             return NextResponse.next();
         }
+
         if (refreshToken) {
-            const data = await checkSessionServer();
-            const setCookie = data.headers["set-cookie"];
-            if (setCookie) {
-                const lines = Array.isArray(setCookie)
-                    ? setCookie
-                    : [setCookie]; // Масив рядків Set-Cookie
-                // Розбираємо кожен рядок і оновлюємо куки
-                const tokenNames = ["accessToken", "refreshToken"] as const;
-                // Проходимо по кожному рядку Set-Cookie
-                for (const line of lines) {
-                    const parsed = parse(line);
-                    const options = {
-                        expires: parsed.Expires
-                            ? new Date(parsed.Expires)
-                            : undefined,
-                        path: parsed.Path,
-                        maxAge: parsed["Max-Age"]
-                            ? Number(parsed["Max-Age"])
-                            : undefined,
-                    };
-                    for (const name of tokenNames) {
-                        const val = parsed[name];
-                        if (val) cookieStore.set(name, val, options);
+            try {
+                const data = await checkSessionServer();
+                const setCookie = data.headers["set-cookie"];
+
+                if (setCookie) {
+                    const response = NextResponse.next();
+                    const lines = Array.isArray(setCookie)
+                        ? setCookie
+                        : [setCookie]; // Масив рядків Set-Cookie
+                    // Розбираємо кожен рядок і оновлюємо куки
+                    const tokenNames = ["accessToken", "refreshToken"] as const;
+
+                    for (const line of lines) {
+                        const parsed = parse(line);
+
+                        for (const name of tokenNames) {
+                            const val = parsed[name];
+                            if (val) {
+                                response.cookies.set(name, val, {
+                                    path: parsed.Path || "/",
+                                    httpOnly: true,
+                                    sameSite: "lax",
+                                    secure:
+                                        process.env.NODE_ENV === "production",
+                                    expires: parsed.Expires
+                                        ? new Date(parsed.Expires)
+                                        : undefined,
+                                    maxAge: parsed["Max-Age"]
+                                        ? Number(parsed["Max-Age"])
+                                        : undefined,
+                                });
+                            }
+                        }
                     }
+
+                    // Успішно оновили токени - пропускаємо запит далі
+                    return response;
                 }
+            } catch (error) {
+                console.error("Session refresh failed:", error);
+                // У разі помилки йдемо до редіректу нижче
             }
         }
 
